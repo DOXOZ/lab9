@@ -1,13 +1,3 @@
-USE master;
-GO
-
-IF EXISTS (SELECT * FROM sys.databases WHERE name = 'duka')
-BEGIN
-    ALTER DATABASE duka SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE duka;
-END
-GO
-
 CREATE DATABASE duka;
 GO
 
@@ -22,8 +12,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_contragent_type (
-        id_contragent_type INT IDENTITY(1,1) PRIMARY KEY,
-        contragent_type VARCHAR(50) NOT NULL
+        id_contragent_type INT NOT NULL IDENTITY(1,1),
+        contragent_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_contragent_type)
     );
 END
 GO
@@ -36,8 +27,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_district (
-        id_district INT IDENTITY(1,1) PRIMARY KEY,
-        district VARCHAR(50) NOT NULL
+        id_district INT NOT NULL IDENTITY(1,1),
+        district NVARCHAR(45) NULL,
+        PRIMARY KEY (id_district)
     );
 END
 GO
@@ -50,22 +42,27 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_contragent (
-        id_contragent INT IDENTITY(1,1) PRIMARY KEY,
-        first_name VARCHAR(50) NOT NULL,
-        middle_name VARCHAR(50),
-        last_name VARCHAR(50) NOT NULL,
-        org_name VARCHAR(100),
-        passport_num VARCHAR(20),
-        position VARCHAR(50),
-        login_ VARCHAR(50) NOT NULL,
-        psw VARCHAR(50) NOT NULL,
-        reg_date DATE NOT NULL,
-        pers_discount DECIMAL(5,2),
+        id_contragent INT NOT NULL IDENTITY(1,1),
+        first_name NVARCHAR(45) NULL,
+        middle_name NVARCHAR(45) NULL,
+        last_name NVARCHAR(45) NULL,
+        org_name NVARCHAR(45) NULL,
+        passport_num NVARCHAR(45) NULL,
+        position NVARCHAR(145) NULL,
+        login_ NVARCHAR(45) NULL,
+        psw NVARCHAR(45) NULL,
+        reg_date NVARCHAR(45) NULL,
+        pers_discount FLOAT NULL,
         contragent_type_id_contragent_type INT NOT NULL,
-        phone VARCHAR(20),
-        district_id_district INT,
-        FOREIGN KEY (contragent_type_id_contragent_type) REFERENCES duka_contragent_type(id_contragent_type),
-        FOREIGN KEY (district_id_district) REFERENCES duka_district(id_district)
+        phone NVARCHAR(45) NULL,
+        district_id_district INT NOT NULL,
+        PRIMARY KEY (id_contragent),
+        CONSTRAINT fk_duka_contragent_type
+            FOREIGN KEY (contragent_type_id_contragent_type)
+            REFERENCES duka_contragent_type (id_contragent_type),
+        CONSTRAINT fk_duka_district
+            FOREIGN KEY (district_id_district)
+            REFERENCES duka_district (id_district)
     );
 END
 GO
@@ -98,8 +95,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_positions (
-        id_positions INT IDENTITY(1,1) PRIMARY KEY,
-        positions VARCHAR(50) NOT NULL
+        id_positions INT NOT NULL IDENTITY(1,1),
+        positions NVARCHAR(45) NULL,
+        PRIMARY KEY (id_positions)
     );
 END
 GO
@@ -112,17 +110,20 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_employee (
-        id_employee INT IDENTITY(1,1) PRIMARY KEY,
-        first_name VARCHAR(50) NOT NULL,
-        middle_name VARCHAR(50),
-        last_name VARCHAR(50) NOT NULL,
-        reg_date DATE NOT NULL,
-        emp_login VARCHAR(50) NOT NULL,
-        emp_password VARCHAR(50) NOT NULL,
-        emp_phone VARCHAR(20),
-        emp_month_salary DECIMAL(10,2),
+        id_employee INT NOT NULL IDENTITY(1,1),
+        first_name NVARCHAR(45) NULL,
+        middle_name NVARCHAR(45) NULL,
+        last_name NVARCHAR(45) NULL,
+        reg_date DATE NULL,
+        emp_login NVARCHAR(45) NULL,
+        emp_password NVARCHAR(45) NULL,
+        emp_phone NVARCHAR(45) NULL,
+        emp_month_salary FLOAT NULL,
         positions_id_positions INT NOT NULL,
-        FOREIGN KEY (positions_id_positions) REFERENCES duka_positions(id_positions)
+        PRIMARY KEY (id_employee),
+        CONSTRAINT fk_duka_employee_positions
+            FOREIGN KEY (positions_id_positions)
+            REFERENCES duka_positions (id_positions)
     );
 END
 GO
@@ -146,8 +147,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_operation_status (
-        id_operation_status INT IDENTITY(1,1) PRIMARY KEY,
-        operation_status VARCHAR(50) NOT NULL
+        id_operation_status INT NOT NULL IDENTITY(1,1),
+        operation_status NVARCHAR(45) NULL,
+        PRIMARY KEY (id_operation_status)
     );
 END
 GO
@@ -160,18 +162,24 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_operations (
-        id_operations INT IDENTITY(1,1) PRIMARY KEY,
-        operation_date DATE NOT NULL,
-        doc_num VARCHAR(20) NOT NULL,
-        comments TEXT,
+        id_operations INT NOT NULL IDENTITY(1,1),
+        operation_date DATE NULL,
+        doc_num NVARCHAR(45) NULL,
+        comments NVARCHAR(145) NULL,
         contragent_id_contragent INT NOT NULL,
         operation_type_id_operation_type INT NOT NULL,
         employee_id_employee INT NOT NULL,
         operation_status_id_operation_status INT NOT NULL,
-        FOREIGN KEY (contragent_id_contragent) REFERENCES duka_contragent(id_contragent),
-        FOREIGN KEY (operation_type_id_operation_type) REFERENCES duka_operation_type(id_operation_type),
-        FOREIGN KEY (employee_id_employee) REFERENCES duka_employee(id_employee),
-        FOREIGN KEY (operation_status_id_operation_status) REFERENCES duka_operation_status(id_operation_status)
+        PRIMARY KEY (id_operations),
+        CONSTRAINT fk_duka_operations_contragent
+            FOREIGN KEY (contragent_id_contragent)
+            REFERENCES duka_contragent (id_contragent),
+        CONSTRAINT fk_duka_operations_employee
+            FOREIGN KEY (employee_id_employee)
+            REFERENCES duka_employee (id_employee),
+        CONSTRAINT fk_duka_operations_status
+            FOREIGN KEY (operation_status_id_operation_status)
+            REFERENCES duka_operation_status (id_operation_status)
     );
 END
 GO
@@ -213,8 +221,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_goods_category (
-        id_goods_category INT IDENTITY(1,1) PRIMARY KEY,
-        goods_category VARCHAR(50) NOT NULL
+        id_goods_category INT NOT NULL IDENTITY(1,1),
+        goods_category NVARCHAR(45) NULL,
+        PRIMARY KEY (id_goods_category)
     );
 END
 GO
@@ -227,11 +236,14 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_goods (
-        id_goods INT IDENTITY(1,1) PRIMARY KEY,
-        goods_name VARCHAR(100) NOT NULL,
-        goods_comments TEXT,
+        id_goods INT NOT NULL IDENTITY(1,1),
+        goods_name NVARCHAR(145) NULL,
+        goods_comments NVARCHAR(245) NULL,
         goods_category_id_goods_category INT NOT NULL,
-        FOREIGN KEY (goods_category_id_goods_category) REFERENCES duka_goods_category(id_goods_category)
+        PRIMARY KEY (id_goods),
+        CONSTRAINT fk_duka_goods_category
+            FOREIGN KEY (goods_category_id_goods_category)
+            REFERENCES duka_goods_category (id_goods_category)
     );
 END
 GO
@@ -255,8 +267,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_wharehouse (
-        id_wharehouse INT IDENTITY(1,1) PRIMARY KEY,
-        wharehouse VARCHAR(50) NOT NULL
+        id_wharehouse INT NOT NULL IDENTITY(1,1),
+        wharehouse NVARCHAR(45) NULL,
+        PRIMARY KEY (id_wharehouse)
     );
 END
 GO
@@ -269,17 +282,26 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_operation_list (
-        id_operation_list INT IDENTITY(1,1) PRIMARY KEY,
-        quantity DECIMAL(10,2) NOT NULL,
-        prise_with_discount DECIMAL(10,2) NOT NULL,
+        id_operation_list INT NOT NULL IDENTITY(1,1),
+        quantity NVARCHAR(45) NULL,
+        prise_with_discount FLOAT NULL,
         operations_id_operations INT NOT NULL,
-        operation_list_id_operation_list INT,
+        operation_list_id_operation_list INT NOT NULL,
         goods_id_goods INT NOT NULL,
         wharehouse_id_wharehouse INT NOT NULL,
-        FOREIGN KEY (operations_id_operations) REFERENCES duka_operations(id_operations),
-        FOREIGN KEY (operation_list_id_operation_list) REFERENCES duka_operation_list(id_operation_list),
-        FOREIGN KEY (goods_id_goods) REFERENCES duka_goods(id_goods),
-        FOREIGN KEY (wharehouse_id_wharehouse) REFERENCES duka_wharehouse(id_wharehouse)
+        PRIMARY KEY (id_operation_list),
+        CONSTRAINT fk_duka_oplist_operations
+            FOREIGN KEY (operations_id_operations)
+            REFERENCES duka_operations (id_operations),
+        CONSTRAINT fk_duka_oplist_self
+            FOREIGN KEY (operation_list_id_operation_list)
+            REFERENCES duka_operation_list (id_operation_list),
+        CONSTRAINT fk_duka_oplist_goods
+            FOREIGN KEY (goods_id_goods)
+            REFERENCES duka_goods (id_goods),
+        CONSTRAINT fk_duka_oplist_wh
+            FOREIGN KEY (wharehouse_id_wharehouse)
+            REFERENCES duka_wharehouse (id_wharehouse)
     );
 END
 GO
@@ -330,8 +352,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_event_type (
-        id_event_type INT PRIMARY KEY,
-        event_type VARCHAR(50) NOT NULL
+        id_event_type INT NOT NULL,
+        event_type NVARCHAR(145) NULL,
+        PRIMARY KEY (id_event_type)
     );
 END
 GO
@@ -344,14 +367,17 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_promoutions (
-        id_promoutions INT IDENTITY(1,1) PRIMARY KEY,
-        promoutions_name VARCHAR(100) NOT NULL,
-        discount_value DECIMAL(5,2) NOT NULL,
-        promoution_comment TEXT,
-        promoution_date_start DATE NOT NULL,
-        promoution_date_end DATE NOT NULL,
+        id_promoutions INT NOT NULL IDENTITY(1,1),
+        promoutions_name NVARCHAR(45) NULL,
+        discount_value FLOAT NULL,
+        promoution_comment NVARCHAR(450) NULL,
+        promoution_date_start DATE NULL,
+        promoution_date_end DATE NULL,
         event_type_id_event_type INT NOT NULL,
-        FOREIGN KEY (event_type_id_event_type) REFERENCES duka_event_type(id_event_type)
+        PRIMARY KEY (id_promoutions),
+        CONSTRAINT fk_duka_promoutions_event
+            FOREIGN KEY (event_type_id_event_type)
+            REFERENCES duka_event_type (id_event_type)
     );
 END
 GO
@@ -375,12 +401,17 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_price_list (
-        id_price_list INT IDENTITY(1,1) PRIMARY KEY,
-        price_list DECIMAL(10,2) NOT NULL,
+        id_price_list INT NOT NULL IDENTITY(1,1),
+        price_list NVARCHAR(45) NULL,
         goods_id_goods INT NOT NULL,
-        promoutions_id_promoutions INT,
-        FOREIGN KEY (goods_id_goods) REFERENCES duka_goods(id_goods),
-        FOREIGN KEY (promoutions_id_promoutions) REFERENCES duka_promoutions(id_promoutions)
+        promoutions_id_promoutions INT NOT NULL,
+        PRIMARY KEY (id_price_list),
+        CONSTRAINT fk_duka_pricelist_goods
+            FOREIGN KEY (goods_id_goods)
+            REFERENCES duka_goods (id_goods),
+        CONSTRAINT fk_duka_pricelist_prom
+            FOREIGN KEY (promoutions_id_promoutions)
+            REFERENCES duka_promoutions (id_promoutions)
     );
 END
 GO
@@ -413,8 +444,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_write_off_types (
-        id_write_off_types INT IDENTITY(1,1) PRIMARY KEY,
-        write_off_types VARCHAR(50) NOT NULL
+        id_write_off_types INT NOT NULL IDENTITY(1,1),
+        write_off_types NVARCHAR(45) NULL,
+        PRIMARY KEY (id_write_off_types)
     );
 END
 GO
@@ -427,14 +459,19 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_write_off_list (
-        id_write_off_list INT IDENTITY(1,1) PRIMARY KEY,
-        write_off_amount DECIMAL(10,2) NOT NULL,
+        id_write_off_list INT NOT NULL IDENTITY(1,1),
+        write_off_amount FLOAT NULL,
         operation_list_id_operation_list INT NOT NULL,
         write_off_types_id_write_off_types INT NOT NULL,
-        write_off_date DATE NOT NULL,
-        write_off_comments TEXT,
-        FOREIGN KEY (operation_list_id_operation_list) REFERENCES duka_operation_list(id_operation_list),
-        FOREIGN KEY (write_off_types_id_write_off_types) REFERENCES duka_write_off_types(id_write_off_types)
+        write_off_date DATE NULL,
+        write_off_comments NVARCHAR(245) NULL,
+        PRIMARY KEY (id_write_off_list),
+        CONSTRAINT fk_duka_wolist_oplist
+            FOREIGN KEY (operation_list_id_operation_list)
+            REFERENCES duka_operation_list (id_operation_list),
+        CONSTRAINT fk_duka_wolist_type
+            FOREIGN KEY (write_off_types_id_write_off_types)
+            REFERENCES duka_write_off_types (id_write_off_types)
     );
 END
 GO
@@ -467,8 +504,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_reason_type (
-        id_reason_type INT IDENTITY(1,1) PRIMARY KEY,
-        reason_type VARCHAR(50) NOT NULL
+        id_reason_type INT NOT NULL IDENTITY(1,1),
+        reason_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_reason_type)
     );
 END
 GO
@@ -481,14 +519,19 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_earning_payments (
-        id_earning_payments INT IDENTITY(1,1) PRIMARY KEY,
-        earning_payments_amount DECIMAL(10,2) NOT NULL,
-        earning_payments_date DATE NOT NULL,
-        earning_payments_comments TEXT,
+        id_earning_payments INT NOT NULL IDENTITY(1,1),
+        earning_payments_amount FLOAT NULL,
+        earning_payments_date DATE NULL,
+        earning_payments_comments NVARCHAR(545) NULL,
         employee_id_employee INT NOT NULL,
         reason_type_id_reason_type INT NOT NULL,
-        FOREIGN KEY (employee_id_employee) REFERENCES duka_employee(id_employee),
-        FOREIGN KEY (reason_type_id_reason_type) REFERENCES duka_reason_type(id_reason_type)
+        PRIMARY KEY (id_earning_payments),
+        CONSTRAINT fk_duka_epay_employee
+            FOREIGN KEY (employee_id_employee)
+            REFERENCES duka_employee (id_employee),
+        CONSTRAINT fk_duka_epay_reason
+            FOREIGN KEY (reason_type_id_reason_type)
+            REFERENCES duka_reason_type (id_reason_type)
     );
 END
 GO
@@ -521,8 +564,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_payment_type (
-        id_payment_type INT IDENTITY(1,1) PRIMARY KEY,
-        payment_type VARCHAR(50) NOT NULL
+        id_payment_type INT NOT NULL IDENTITY(1,1),
+        payment_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_payment_type)
     );
 END
 GO
@@ -535,14 +579,19 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_payments (
-        id_payments INT IDENTITY(1,1) PRIMARY KEY,
-        payment_date DATE NOT NULL,
-        payment_sum DECIMAL(10,2) NOT NULL,
-        payment_comments TEXT,
+        id_payments INT NOT NULL IDENTITY(1,1),
+        payment_date DATE NULL,
+        payment_sum FLOAT NULL,
+        payment_comments NVARCHAR(450) NULL,
         operations_id_operations INT NOT NULL,
         payment_type_id_payment_type INT NOT NULL,
-        FOREIGN KEY (operations_id_operations) REFERENCES duka_operations(id_operations),
-        FOREIGN KEY (payment_type_id_payment_type) REFERENCES duka_payment_type(id_payment_type)
+        PRIMARY KEY (id_payments),
+        CONSTRAINT fk_duka_pay_ops
+            FOREIGN KEY (operations_id_operations)
+            REFERENCES duka_operations (id_operations),
+        CONSTRAINT fk_duka_pay_type
+            FOREIGN KEY (payment_type_id_payment_type)
+            REFERENCES duka_payment_type (id_payment_type)
     );
 END
 GO
@@ -575,9 +624,10 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_taxes (
-        id_taxes INT IDENTITY(1,1) PRIMARY KEY,
-        taxe_name VARCHAR(50) NOT NULL,
-        tax_rate DECIMAL(5,2) NOT NULL
+        id_taxes INT NOT NULL IDENTITY(1,1),
+        taxe_name NVARCHAR(450) NULL,
+        tax_rate FLOAT NULL,
+        PRIMARY KEY (id_taxes)
     );
 END
 GO
@@ -590,8 +640,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_user_type (
-        id_user_type INT IDENTITY(1,1) PRIMARY KEY,
-        user_type VARCHAR(50) NOT NULL
+        id_user_type INT NOT NULL IDENTITY(1,1),
+        user_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_user_type)
     );
 END
 GO
@@ -604,12 +655,15 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_reports (
-        id_reports INT IDENTITY(1,1) PRIMARY KEY,
-        id_user INT NOT NULL,
-        report_date DATETIME NOT NULL,
-        report_id INT NOT NULL,
+        id_reports INT NOT NULL IDENTITY(1,1),
+        id_user INT NULL,
+        report_date DATETIME NULL,
+        report_id INT NULL,
         user_type_id_user_type INT NOT NULL,
-        FOREIGN KEY (user_type_id_user_type) REFERENCES duka_user_type(id_user_type)
+        PRIMARY KEY (id_reports),
+        CONSTRAINT fk_reports_user_type
+            FOREIGN KEY (user_type_id_user_type)
+            REFERENCES duka_user_type (id_user_type)
     );
 END
 GO
@@ -633,8 +687,9 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE TABLE duka_operation_type (
-        id_operation_type INT IDENTITY(1,1) PRIMARY KEY,
-        operation_type VARCHAR(50) NOT NULL
+        id_operation_type INT NOT NULL IDENTITY(1,1),
+        operation_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_operation_type)
     );
 END
 GO
@@ -730,139 +785,4 @@ BEGIN
     JOIN duka_earning_payments ep ON ep.employee_id_employee = e.id_employee
     WHERE ep.earning_payments_date BETWEEN @start_date AND @end_date;
 END
-GO
-
--- Создание триггеров для автоматического обновления данных
-GO
-
-CREATE TRIGGER trg_update_stock
-ON duka_operation_list
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- Обновление остатков на складе
-    UPDATE ol
-    SET quantity = CASE
-        WHEN o.operation_type_id_operation_type IN (2, 3) -- Закупка или возврат от покупателя
-        THEN ol.quantity + i.quantity
-        WHEN o.operation_type_id_operation_type IN (1, 4) -- Продажа или возврат поставщику
-        THEN ol.quantity - i.quantity
-        ELSE ol.quantity
-    END
-    FROM duka_operation_list ol
-    JOIN inserted i ON i.goods_id_goods = ol.goods_id_goods 
-                   AND i.wharehouse_id_wharehouse = ol.wharehouse_id_wharehouse
-    JOIN duka_operations o ON i.operations_id_operations = o.id_operations
-    WHERE o.operation_status_id_operation_status = 3; -- Выполнена
-END;
-GO
-
-CREATE TRIGGER trg_check_stock
-ON duka_operation_list
-INSTEAD OF INSERT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    -- Проверка наличия достаточного количества товара
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        JOIN duka_operations o ON i.operations_id_operations = o.id_operations
-        WHERE o.operation_type_id_operation_type = 1 -- Продажа
-        AND NOT EXISTS (
-            SELECT 1
-            FROM duka_operation_list ol
-            WHERE ol.goods_id_goods = i.goods_id_goods
-            AND ol.wharehouse_id_wharehouse = i.wharehouse_id_wharehouse
-            GROUP BY ol.goods_id_goods, ol.wharehouse_id_wharehouse
-            HAVING SUM(CASE
-                WHEN o.operation_type_id_operation_type IN (2, 3) THEN ol.quantity
-                WHEN o.operation_type_id_operation_type IN (1, 4) THEN -ol.quantity
-                ELSE 0
-            END) >= i.quantity
-        )
-    )
-    BEGIN
-        RAISERROR ('Недостаточно товара на складе', 16, 1);
-        RETURN;
-    END
-
-    -- Если проверка пройдена, вставляем данные
-    INSERT INTO duka_operation_list (
-        quantity, prise_with_discount, operations_id_operations,
-        operation_list_id_operation_list, goods_id_goods, wharehouse_id_wharehouse
-    )
-    SELECT 
-        quantity, prise_with_discount, operations_id_operations,
-        operation_list_id_operation_list, goods_id_goods, wharehouse_id_wharehouse
-    FROM inserted;
-END;
-GO
-
--- Создание представлений для часто используемых запросов
-CREATE VIEW view_current_stock
-AS
-SELECT 
-    w.wharehouse,
-    g.goods_name,
-    gc.goods_category,
-    ISNULL(SUM(CASE
-        WHEN o.operation_type_id_operation_type IN (2, 3) THEN ol.quantity
-        WHEN o.operation_type_id_operation_type IN (1, 4) THEN -ol.quantity
-        ELSE 0
-    END), 0) as current_quantity,
-    MAX(CASE
-        WHEN o.operation_type_id_operation_type = 2 THEN ol.prise_with_discount
-        ELSE NULL
-    END) as last_purchase_price
-FROM duka_wharehouse w
-CROSS JOIN duka_goods g
-JOIN duka_goods_category gc ON g.goods_category_id_goods_category = gc.id_goods_category
-LEFT JOIN duka_operation_list ol ON g.id_goods = ol.goods_id_goods 
-                                AND w.id_wharehouse = ol.wharehouse_id_wharehouse
-LEFT JOIN duka_operations o ON ol.operations_id_operations = o.id_operations
-                          AND o.operation_status_id_operation_status = 3
-GROUP BY w.wharehouse, g.goods_name, gc.goods_category;
-GO
-
-CREATE VIEW view_current_prices
-AS
-SELECT 
-    g.goods_name,
-    gc.goods_category,
-    pl.price_list as base_price,
-    ISNULL(p.discount_value, 0) as current_discount,
-    CASE 
-        WHEN p.id_promoutions IS NOT NULL 
-        AND GETDATE() BETWEEN p.promoution_date_start AND p.promoution_date_end
-        THEN pl.price_list * (1 - p.discount_value)
-        ELSE pl.price_list
-    END as current_price,
-    p.promoutions_name as active_promotion
-FROM duka_goods g
-JOIN duka_goods_category gc ON g.goods_category_id_goods_category = gc.id_goods_category
-LEFT JOIN duka_price_list pl ON g.id_goods = pl.goods_id_goods
-LEFT JOIN duka_promoutions p ON pl.promoutions_id_promoutions = p.id_promoutions
-                            AND GETDATE() BETWEEN p.promoution_date_start AND p.promoution_date_end;
-GO
-
-CREATE VIEW view_employee_performance
-AS
-SELECT 
-    e.last_name + ' ' + e.first_name as employee_name,
-    p.positions as position,
-    COUNT(DISTINCT o.id_operations) as total_operations,
-    SUM(ol.quantity * ol.prise_with_discount) as total_sales_amount,
-    AVG(ol.quantity * ol.prise_with_discount) as avg_operation_amount,
-    MAX(o.operation_date) as last_operation_date
-FROM duka_employee e
-JOIN duka_positions p ON e.positions_id_positions = p.id_positions
-LEFT JOIN duka_operations o ON e.id_employee = o.employee_id_employee
-LEFT JOIN duka_operation_list ol ON o.id_operations = ol.operations_id_operations
-WHERE o.operation_type_id_operation_type = 1 -- Продажа
-AND o.operation_status_id_operation_status = 3 -- Выполнена
-GROUP BY e.last_name, e.first_name, p.positions;
 GO
