@@ -210,85 +210,124 @@ GO
 
 -- Типы контрагентов
 INSERT INTO duka_contragent_type (contragent_type) VALUES
-  ('Individual'),
-  ('Corporate');
+    ('Поставщик'),
+    ('Покупатель'),
+    ('Сотрудник'),
+    ('Партнер');
 
 -- Районы
 INSERT INTO duka_district (district) VALUES
-  ('North'),
-  ('South'),
-  ('East'),
-  ('West');
+    ('Центральный'),
+    ('Северный'),
+    ('Южный'),
+    ('Восточный'),
+    ('Западный');
 
--- Должности сотрудников
+-- Должности
 INSERT INTO duka_positions (positions) VALUES
-  ('Administrator'),
-  ('Seller'),
-  ('Purchasing Manager'),
-  ('Accountant');
+    ('Директор'),
+    ('Менеджер по продажам'),
+    ('Менеджер по закупкам'),
+    ('Бухгалтер'),
+    ('Кладовщик'),
+    ('Продавец-консультант');
 
 -- Статусы операций
 INSERT INTO duka_operation_status (operation_status) VALUES
-  ('Pending'),
-  ('Completed'),
-  ('Cancelled');
+    ('Новая'),
+    ('В обработке'),
+    ('Выполнена'),
+    ('Отменена'),
+    ('На согласовании'),
+    ('Ожидает оплаты');
 
 -- Категории товаров
 INSERT INTO duka_goods_category (goods_category) VALUES
-  ('Flowers'),
-  ('Trees'),
-  ('Shrubs');
+    ('Электроника'),
+    ('Бытовая техника'),
+    ('Компьютеры'),
+    ('Смартфоны'),
+    ('Аксессуары'),
+    ('Комплектующие');
 
 -- Склады
 INSERT INTO duka_wharehouse (wharehouse) VALUES
-  ('Main Warehouse'),
-  ('Secondary Warehouse');
+    ('Основной склад'),
+    ('Склад электроники'),
+    ('Склад бытовой техники'),
+    ('Транзитный склад'),
+    ('Склад брака');
 
--- Типы событий для акций
+-- Типы событий
 INSERT INTO duka_event_type (id_event_type, event_type) VALUES
-  (1, 'Promotion'),
-  (2, 'Seasonal'),
-  (3, 'Clearance');
+    (1, 'Сезонная распродажа'),
+    (2, 'Праздничная акция'),
+    (3, 'Специальное предложение'),
+    (4, 'Распродажа остатков'),
+    (5, 'Акция для постоянных клиентов');
 
--- Акции
-INSERT INTO duka_promoutions (
-    promoutions_name,
-    discount_value,
-    promoution_comment,
-    promoution_date_start,
-    promoution_date_end,
-    event_type_id_event_type
-) VALUES
-  ('Spring Sale', 0.15, '15% off spring items', '2025-03-01', '2025-03-31', 2),
-  ('Summer Discount', 0.10, '10% off summer items', '2025-06-01', '2025-06-30', 2);
-
--- Прайс-листы с привязкой к акциям
-INSERT INTO duka_price_list (price_list, goods_id_goods, promoutions_id_promoutions) VALUES
-  ('Standard Pricing', 1, 1),
-  ('Sale Pricing',     1, 2),
-  ('Standard Pricing', 2, 1),
-  ('Sale Pricing',     2, 2);
+-- Типы операций
+INSERT INTO duka_operation_type (operation_type) VALUES
+    ('Продажа'),
+    ('Закупка'),
+    ('Возврат от покупателя'),
+    ('Возврат поставщику'),
+    ('Перемещение между складами'),
+    ('Списание'),
+    ('Инвентаризация');
 
 -- Типы списания
 INSERT INTO duka_write_off_types (write_off_types) VALUES
-  ('Damaged'),
-  ('Expired');
+    ('Брак'),
+    ('Истек срок годности'),
+    ('Повреждение при хранении'),
+    ('Кража'),
+    ('Потеря товарного вида');
 
--- Причины выплат сотрудникам
+-- Причины выплат
 INSERT INTO duka_reason_type (reason_type) VALUES
-  ('Bonus'),
-  ('Reimbursement');
+    ('Заработная плата'),
+    ('Премия'),
+    ('Компенсация'),
+    ('Больничный'),
+    ('Отпускные'),
+    ('Командировочные');
 
 -- Типы пользователей
 INSERT INTO duka_user_type (user_type) VALUES
-  ('Admin'),
-  ('Employee'),
-  ('Manager');
+    ('Администратор'),
+    ('Менеджер'),
+    ('Продавец'),
+    ('Кладовщик'),
+    ('Бухгалтер');
+
+-- Типы оплаты
+INSERT INTO duka_payment_type (payment_type) VALUES
+    ('Наличные'),
+    ('Банковская карта'),
+    ('Банковский перевод'),
+    ('Электронный платеж'),
+    ('В кредит');
 
 -- Налоги
 INSERT INTO duka_taxes (taxe_name, tax_rate) VALUES
-  ('VAT',        0.12),
-  ('Income Tax', 0.10);
+    ('НДС', 0.20),
+    ('Налог на прибыль', 0.20),
+    ('НДФЛ', 0.13),
+    ('Страховые взносы', 0.30);
+
+-- Сотрудники
+INSERT INTO duka_employee (
+    first_name, middle_name, last_name,
+    reg_date, emp_login, emp_password,
+    emp_phone, emp_month_salary,
+    positions_id_positions
+) VALUES
+    ('Иван', 'Петрович', 'Сидоров', '2023-01-15', 'isidorov', 'pass123', '+7900111222', 80000.00, 1),
+    ('Мария', 'Ивановна', 'Петрова', '2023-02-01', 'mpetrova', 'pass124', '+7900111223', 60000.00, 2),
+    ('Петр', 'Сергеевич', 'Иванов', '2023-02-15', 'pivanov', 'pass125', '+7900111224', 65000.00, 3),
+    ('Анна', 'Михайловна', 'Козлова', '2023-03-01', 'akozlova', 'pass126', '+7900111225', 55000.00, 4),
+    ('Сергей', 'Александрович', 'Новиков', '2023-03-15', 'snovikov', 'pass127', '+7900111226', 45000.00, 5);
 
 -- Контрагенты
 INSERT INTO duka_contragent (
@@ -298,37 +337,35 @@ INSERT INTO duka_contragent (
     contragent_type_id_contragent_type,
     phone, district_id_district
 ) VALUES
-  ('Ivan',  'Ivanovich',  'Petrov', 
-   'Petrov LLC', 'AB123456', 'CEO',
-   'ipetrov', 'pwd123', '2025-05-10', 0.05,
-   2, '0700123000', 1),
-  ('Maria', 'Sergeevna',  'Smirnova',
-   NULL,        'CD789012', 'Manager',
-   'msmirnova','pwd456','2025-05-09', 0.10,
-   1, '0700123001', 2);
-
--- Сотрудники
-INSERT INTO duka_employee (
-    first_name, middle_name, last_name,
-    reg_date, emp_login, emp_password,
-    emp_phone, emp_month_salary,
-    positions_id_positions
-) VALUES
-  ('Alex',  'Samuel',   'Johnson',
-   '2025-04-01','ajohnson','emp123',
-   '0700123002', 2000.00, 1),
-  ('Sophie','Theresa',  'Lee',
-   '2025-04-15','slee',    'emp456',
-   '0700123003', 1800.00, 2);
+    ('Алексей', 'Владимирович', 'Смирнов', 'ООО "Электроника"', '4510123456', 'Директор', 
+    'asmirnov', 'pass128', '2023-01-10', 0.10, 1, '+7900111227', 1),
+    ('Ольга', 'Петровна', 'Васильева', 'ИП Васильева', '4510123457', 'ИП',
+    'ovasileva', 'pass129', '2023-01-20', 0.05, 2, '+7900111228', 2),
+    ('Дмитрий', 'Сергеевич', 'Морозов', 'ООО "ТехноМир"', '4510123458', 'Менеджер',
+    'dmorozov', 'pass130', '2023-02-05', 0.07, 1, '+7900111229', 3);
 
 -- Товары
 INSERT INTO duka_goods (
-    goods_name, goods_comments, goods_category_id_goods_category
+    goods_name, goods_comments,
+    goods_category_id_goods_category
 ) VALUES
-  ('Rose Bouquet', 'Red roses, 12 pcs', 1),
-  ('Oak Tree',     'Mature oak, 3m tall', 2);
+    ('Смартфон Samsung Galaxy S21', 'Флагманский смартфон', 4),
+    ('Ноутбук Lenovo IdeaPad', 'Офисный ноутбук', 3),
+    ('Холодильник LG', 'Двухкамерный холодильник', 2),
+    ('Микроволновая печь Samsung', 'С грилем', 2),
+    ('Клавиатура Logitech', 'Механическая клавиатура', 5);
 
--- Операции (документы)
+-- Акции
+INSERT INTO duka_promoutions (
+    promoutions_name, discount_value,
+    promoution_comment, promoution_date_start,
+    promoution_date_end, event_type_id_event_type
+) VALUES
+    ('Новогодняя распродажа', 0.20, 'Скидки до 20% на всю электронику', '2023-12-20', '2024-01-10', 2),
+    ('Весенняя акция', 0.15, 'Скидки на бытовую технику', '2024-03-01', '2024-03-31', 1),
+    ('Чёрная пятница', 0.30, 'Максимальные скидки', '2023-11-24', '2023-11-26', 3);
+
+-- Операции
 INSERT INTO duka_operations (
     operation_date, doc_num, comments,
     contragent_id_contragent,
@@ -336,22 +373,31 @@ INSERT INTO duka_operations (
     employee_id_employee,
     operation_status_id_operation_status
 ) VALUES
-  ('2025-05-10', 'DOC001', 'First order',
-   1,  /* operation_type */ 1,
-   1,  /* employee */ 1,
-   1   /* status Pending */);
+    ('2023-11-01', 'ПН-0001', 'Поступление товара', 1, 2, 3, 3),
+    ('2023-11-02', 'РН-0001', 'Продажа клиенту', 2, 1, 2, 3),
+    ('2023-11-03', 'ВП-0001', 'Возврат от покупателя', 2, 3, 2, 3);
 
--- Позиции в операции (запасы/продажи)
+-- Позиции операций
 INSERT INTO duka_operation_list (
-    quantity,
-    prise_with_discount,
+    quantity, prise_with_discount,
     operations_id_operations,
     operation_list_id_operation_list,
     goods_id_goods,
     wharehouse_id_wharehouse
 ) VALUES
-  ( 5, 100.0, 1, 1, 1, 1),
-  (10,  50.0, 1, 1, 2, 2);
+    ('10', 45000.00, 1, 1, 1, 1),
+    ('5', 35000.00, 1, 1, 2, 1),
+    ('1', 47000.00, 2, 2, 1, 1);
+
+-- Платежи
+INSERT INTO duka_payments (
+    payment_date, payment_sum,
+    payment_comments,
+    operations_id_operations,
+    payment_type_id_payment_type
+) VALUES
+    ('2023-11-01', 500000.00, 'Оплата поставки', 1, 3),
+    ('2023-11-02', 47000.00, 'Оплата покупки', 2, 2);
 
 -- Списания
 INSERT INTO duka_write_off_list (
@@ -361,8 +407,8 @@ INSERT INTO duka_write_off_list (
     write_off_date,
     write_off_comments
 ) VALUES
-  (2, 1, 1, '2025-04-15', 'Damaged items'),
-  (1, 2, 2, '2025-04-16', 'Expired items');
+    (1, 1, 1, '2023-11-10', 'Брак при приемке'),
+    (1, 2, 3, '2023-11-15', 'Повреждение при хранении');
 
 -- Выплаты сотрудникам
 INSERT INTO duka_earning_payments (
@@ -372,23 +418,28 @@ INSERT INTO duka_earning_payments (
     employee_id_employee,
     reason_type_id_reason_type
 ) VALUES
-  (100.00, '2025-04-30', 'Performance bonus', 1, 1),
-  ( 50.00, '2025-04-25', 'Travel reimbursement', 2, 2);
+    (80000.00, '2023-11-05', 'Зарплата за октябрь', 1, 1),
+    (60000.00, '2023-11-05', 'Зарплата за октябрь', 2, 1),
+    (10000.00, '2023-11-10', 'Премия за выполнение плана', 2, 2);
 
--- Типы и платежи
-INSERT INTO duka_payment_type (payment_type) VALUES
-  ('Card'),
-  ('Cash');
-
-INSERT INTO duka_payments (
-    payment_date, payment_sum, payment_comments,
-    operations_id_operations, payment_type_id_payment_type
+-- Прайс-лист
+INSERT INTO duka_price_list (
+    price_list,
+    goods_id_goods,
+    promoutions_id_promoutions
 ) VALUES
-  ('2025-05-10', 200.00, 'Payment for DOC001', 1, 1);
+    (47000.00, 1, NULL),
+    (37000.00, 1, 1),
+    (35000.00, 2, NULL),
+    (29750.00, 2, 1);
 
--- Отчёты
+-- Отчеты
 INSERT INTO duka_reports (
-    id_user, report_date, report_id, user_type_id_user_type
+    id_user,
+    report_date,
+    report_id,
+    user_type_id_user_type
 ) VALUES
-  (1, '2025-05-01 10:00:00', 1001, 1),
-  (2, '2025-05-02 11:00:00', 1002, 2);
+    (1, '2023-11-01 10:00:00', 1, 1),
+    (2, '2023-11-01 11:00:00', 2, 2),
+    (3, '2023-11-01 12:00:00', 3, 3);

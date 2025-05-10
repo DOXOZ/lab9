@@ -966,3 +966,253 @@ BEGIN
     GROUP BY o.operation_date, c.org_name, os.operation_status;
 END
 GO
+
+-- Процедуры для работы с операциями
+CREATE OR ALTER PROCEDURE UpdateOperationStatus
+    @operation_id INT,
+    @status_id INT,
+    @comments NVARCHAR(145) = NULL
+AS
+BEGIN
+    UPDATE duka_operations
+    SET operation_status_id_operation_status = @status_id,
+        comments = ISNULL(@comments, comments)
+    WHERE id_operations = @operation_id;
+END
+GO
+
+-- Процедура для создания новой операции с позициями
+CREATE OR ALTER PROCEDURE CreateOperationWithItems
+    @date DATE,
+    @doc_num NVARCHAR(45),
+    @comments NVARCHAR(145),
+    @contragent_id INT,
+    @operation_type_id INT,
+    @employee_id INT,
+    @status_id INT,
+    @items duka_operation_items READONLY
+AS
+BEGIN
+    BEGIN TRANSACTION;
+    
+    DECLARE @operation_id INT;
+    
+    INSERT INTO duka_operations (
+        operation_date, doc_num, comments,
+        contragent_id_contragent, operation_type_id_operation_type,
+        employee_id_employee, operation_status_id_operation_status
+    )
+    VALUES (
+        @date, @doc_num, @comments,
+        @contragent_id, @operation_type_id,
+        @employee_id, @status_id
+    );
+    
+    SET @operation_id = SCOPE_IDENTITY();
+    
+    INSERT INTO duka_operation_list (
+        quantity, prise_with_discount,
+        operations_id_operations, operation_list_id_operation_list,
+        goods_id_goods, wharehouse_id_wharehouse
+    )
+    SELECT 
+        quantity, price_with_discount,
+        @operation_id, parent_operation_list_id,
+        goods_id, warehouse_id
+    FROM @items;
+    
+    COMMIT TRANSACTION;
+    
+    SELECT @operation_id AS created_operation_id;
+END
+GO
+
+-- Процедура для обновления цен в прайс-листе
+CREATE OR ALTER PROCEDURE UpdatePriceList
+    @goods_id INT,
+    @new_price FLOAT,
+    @promotion_id INT = NULL
+AS
+BEGIN
+    UPDATE duka_price_list
+    SET price_list = @new_price
+    WHERE goods_id_goods = @goods_id
+    AND (@promotion_id IS NULL OR promoutions_id_promoutions = @promotion_id);
+END
+GO
+
+-- Процедура для расчета остатков на складе
+CREATE OR ALTER PROCEDURE CalculateWarehouseStock
+    @warehouse_id INT = NULL,
+    @goods_id INT = NULL
+AS
+BEGIN
+    SELECT 
+        w.wharehouse as 'Склад',
+        g.goods_name as 'Товар',
+        gc.goods_category as 'Категория',
+        SUM(CAST(ol.quantity as float)) as 'Количество',
+        AVG(ol.prise_with_discount) as 'Средняя цена'
+    FROM duka_operation_list ol
+    JOIN duka_wharehouse w ON w.id_wharehouse = ol.wharehouse_id_wharehouse
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category
+    WHERE (@warehouse_id IS NULL OR w.id_wharehouse = @warehouse_id)
+    AND (@goods_id IS NULL OR g.id_goods = @goods_id)
+    GROUP BY w.wharehouse, g.goods_name, gc.goods_category;
+END
+GO
+
+-- Процедура для создания списания
+CREATE OR ALTER PROCEDURE CreateWriteOff
+    @operation_list_id INT,
+    @write_off_type_id INT,
+    @amount FLOAT,
+    @comments NVARCHAR(245),
+    @date DATE = NULL
+AS
+BEGIN
+    INSERT INTO duka_write_off_list (
+        write_off_amount,
+        operation_list_id_operation_list,
+        write_off_types_id_write_off_types,
+        write_off_date,
+        write_off_comments
+    )
+    VALUES (
+        @amount,
+        @operation_list_id,
+        @write_off_type_id,
+        ISNULL(@date, GETDATE()),
+        @comments
+    );
+END
+GO
+
+-- Процедура для создания выплаты сотруднику
+CREATE OR ALTER PROCEDURE CreateEmployeePayment
+    @employee_id INT,
+    @amount FLOAT,
+    @reason_type_id INT,
+    @comments NVARCHAR(545),
+    @date DATE = NULL
+AS
+BEGIN
+    INSERT INTO duka_earning_payments (
+        earning_payments_amount,
+        earning_payments_date,
+        earning_payments_comments,
+        employee_id_employee,
+        reason_type_id_reason_type
+    )
+    VALUES (
+        @amount,
+        ISNULL(@date, GETDATE()),
+        @comments,
+        @employee_id,
+        @reason_type_id
+    );
+END
+GO
+
+-- Процедура для создания акции
+CREATE OR ALTER PROCEDURE CreatePromotion
+    @name NVARCHAR(45),
+    @discount FLOAT,
+    @comment NVARCHAR(450),
+    @start_date DATE,
+    @end_date DATE,
+    @event_type_id INT,
+    @goods_ids duka_goods_list READONLY
+AS
+BEGIN
+    BEGIN TRANSACTION;
+    
+    DECLARE @promotion_id INT;
+    
+    INSERT INTO duka_promoutions (
+        promoutions_name,
+        discount_value,
+        promoution_comment,
+        promoution_date_start,
+        promoution_date_end,
+        event_type_id_event_type
+    )
+    VALUES (
+        @name,
+        @discount,
+        @comment,
+        @start_date,
+        @end_date,
+        @event_type_id
+    );
+    
+    SET @promotion_id = SCOPE_IDENTITY();
+    
+    -- Создаем записи в прайс-листе для товаров со скидкой
+    INSERT INTO duka_price_list (
+        price_list,
+        goods_id_goods,
+        promoutions_id_promoutions
+    )
+    SELECT 
+        (SELECT price_list * (1 - @discount) 
+         FROM duka_price_list 
+         WHERE goods_id_goods = goods_id 
+         AND promoutions_id_promoutions IS NULL),
+        goods_id,
+        @promotion_id
+    FROM @goods_ids;
+    
+    COMMIT TRANSACTION;
+    
+    SELECT @promotion_id AS created_promotion_id;
+END
+GO
+
+-- Процедура для получения истории операций контрагента
+CREATE OR ALTER PROCEDURE GetContragentHistory
+    @contragent_id INT,
+    @start_date DATE = NULL,
+    @end_date DATE = NULL
+AS
+BEGIN
+    SELECT 
+        o.operation_date as 'Дата',
+        o.doc_num as 'Документ',
+        ot.operation_type as 'Тип операции',
+        os.operation_status as 'Статус',
+        g.goods_name as 'Товар',
+        ol.quantity as 'Количество',
+        ol.prise_with_discount as 'Цена',
+        ol.prise_with_discount * CAST(ol.quantity as float) as 'Сумма',
+        e.last_name + ' ' + e.first_name as 'Сотрудник'
+    FROM duka_operations o
+    JOIN duka_operation_type ot ON ot.id_operation_type = o.operation_type_id_operation_type
+    JOIN duka_operation_status os ON os.id_operation_status = o.operation_status_id_operation_status
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    JOIN duka_employee e ON e.id_employee = o.employee_id_employee
+    WHERE o.contragent_id_contragent = @contragent_id
+    AND (@start_date IS NULL OR o.operation_date >= @start_date)
+    AND (@end_date IS NULL OR o.operation_date <= @end_date)
+    ORDER BY o.operation_date DESC;
+END
+GO
+
+-- Создание пользовательских типов данных для параметров процедур
+CREATE TYPE duka_operation_items AS TABLE
+(
+    quantity NVARCHAR(45),
+    price_with_discount FLOAT,
+    parent_operation_list_id INT,
+    goods_id INT,
+    warehouse_id INT
+);
+GO
+
+CREATE TYPE duka_goods_list AS TABLE
+(
+    goods_id INT
+);
+GO
