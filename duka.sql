@@ -67,7 +67,7 @@ BEGIN
 END
 GO
 
---  Indexes for contragent
+-- Indexes for contragent
 IF NOT EXISTS (
     SELECT * FROM sys.indexes 
     WHERE name = 'idx_duka_contragent_contragent_type'
@@ -635,5 +635,154 @@ GO
 -- 22. Тип пользователя (для отчётов)
 IF NOT EXISTS (
     SELECT * FROM sys.objects 
-    WHERE object_id = OBJECT_ID(N'duka_user_type')
+    WHERE object_id = OBJECT_ID(N'duka_user_type') 
       AND type = N'U'
+)
+BEGIN
+    CREATE TABLE duka_user_type (
+        id_user_type INT NOT NULL IDENTITY(1,1),
+        user_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_user_type)
+    );
+END
+GO
+
+-- 23. Отчеты
+IF NOT EXISTS (
+    SELECT * FROM sys.objects 
+    WHERE object_id = OBJECT_ID(N'duka_reports') 
+      AND type = N'U'
+)
+BEGIN
+    CREATE TABLE duka_reports (
+        id_reports INT NOT NULL IDENTITY(1,1),
+        id_user INT NULL,
+        report_date DATETIME NULL,
+        report_id INT NULL,
+        user_type_id_user_type INT NOT NULL,
+        PRIMARY KEY (id_reports),
+        CONSTRAINT fk_reports_user_type
+            FOREIGN KEY (user_type_id_user_type)
+            REFERENCES duka_user_type (id_user_type)
+    );
+END
+GO
+
+-- Index for reports
+IF NOT EXISTS (
+    SELECT * FROM sys.indexes 
+    WHERE name = 'idx_duka_reports_user_type'
+)
+BEGIN
+    CREATE INDEX idx_duka_reports_user_type 
+        ON duka_reports (user_type_id_user_type);
+END
+GO
+
+-- 24. Тип операции
+IF NOT EXISTS (
+    SELECT * FROM sys.objects 
+    WHERE object_id = OBJECT_ID(N'duka_operation_type') 
+      AND type = N'U'
+)
+BEGIN
+    CREATE TABLE duka_operation_type (
+        id_operation_type INT NOT NULL IDENTITY(1,1),
+        operation_type NVARCHAR(45) NULL,
+        PRIMARY KEY (id_operation_type)
+    );
+END
+GO
+
+-- Создание хранимых процедур
+
+-- Процедура для получения остатков на складе
+CREATE OR ALTER PROCEDURE GetWarehouseRemainders
+    @warehouse_id INT = NULL
+AS
+BEGIN
+    SELECT 
+        w.wharehouse as 'Склад',
+        gc.goods_category as 'Тип товара',
+        g.goods_name as 'Товар',
+        SUM(CAST(ol.quantity AS float)) as 'Количество',
+        AVG(ol.prise_with_discount) as 'Цена'
+    FROM duka_operation_list ol
+    JOIN duka_wharehouse w ON w.id_wharehouse = ol.wharehouse_id_wharehouse
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category
+    WHERE (@warehouse_id IS NULL OR w.id_wharehouse = @warehouse_id)
+    GROUP BY w.wharehouse, gc.goods_category, g.goods_name;
+END
+GO
+
+-- Процедура для получения задолженностей клиентов
+CREATE OR ALTER PROCEDURE GetClientDebts
+AS
+BEGIN
+    SELECT 
+        c.org_name as 'Клиент',
+        SUM(p.payment_sum) as 'Сумма задолженности',
+        MAX(p.payment_date) as 'Дата последней оплаты'
+    FROM duka_contragent c
+    JOIN duka_operations o ON o.contragent_id_contragent = c.id_contragent
+    JOIN duka_payments p ON p.operations_id_operations = o.id_operations
+    GROUP BY c.org_name
+    HAVING SUM(p.payment_sum) > 0;
+END
+GO
+
+-- Процедура для получения прибыли по товарам
+CREATE OR ALTER PROCEDURE GetProductProfit
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        g.goods_name as 'Товар',
+        COUNT(DISTINCT o.id_operations) as 'Количество продаж',
+        SUM(ol.prise_with_discount * CAST(ol.quantity AS float)) as 'Выручка',
+        SUM(ol.prise_with_discount * CAST(ol.quantity AS float)) * 0.7 as 'Затраты',
+        SUM(ol.prise_with_discount * CAST(ol.quantity AS float)) * 0.3 as 'Прибыль'
+    FROM duka_goods g
+    JOIN duka_operation_list ol ON ol.goods_id_goods = g.id_goods
+    JOIN duka_operations o ON o.id_operations = ol.operations_id_operations
+    WHERE o.operation_date BETWEEN @start_date AND @end_date
+    GROUP BY g.goods_name;
+END
+GO
+
+-- Процедура для получения продаж по складам
+CREATE OR ALTER PROCEDURE GetSalesByWarehouse
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        w.wharehouse as 'Склад',
+        COUNT(DISTINCT o.id_operations) as 'Количество отгрузок',
+        SUM(ol.prise_with_discount * CAST(ol.quantity AS float)) as 'Сумма продаж'
+    FROM duka_wharehouse w
+    JOIN duka_operation_list ol ON ol.wharehouse_id_wharehouse = w.id_wharehouse
+    JOIN duka_operations o ON o.id_operations = ol.operations_id_operations
+    WHERE o.operation_date BETWEEN @start_date AND @end_date
+    GROUP BY w.wharehouse;
+END
+GO
+
+-- Процедура для получения зарплат сотрудников
+CREATE OR ALTER PROCEDURE GetEmployeeSalaries
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        e.last_name + ' ' + e.first_name as 'Сотрудник',
+        ep.earning_payments_date as 'Дата',
+        ep.earning_payments_amount as 'Начислено',
+        ep.earning_payments_amount as 'Оплачено'
+    FROM duka_employee e
+    JOIN duka_earning_payments ep ON ep.employee_id_employee = e.id_employee
+    WHERE ep.earning_payments_date BETWEEN @start_date AND @end_date;
+END
+GO

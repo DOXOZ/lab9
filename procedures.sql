@@ -690,3 +690,279 @@ BEGIN
     JOIN dbo.Category cat         ON p.Category_ID       = cat.Category_ID;
 END;
 GO
+
+-- Процедура для отчета "Точка безубыточности"
+CREATE OR ALTER PROCEDURE GetBreakEvenReport
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY g.goods_name) as 'Номер',
+        o.operation_date as 'Дата',
+        gc.goods_category as 'Тип товара',
+        g.goods_name as 'Товар',
+        ol.prise_with_discount * 0.7 as 'Цена покупки',
+        ol.prise_with_discount as 'Цена продажи',
+        ol.prise_with_discount * 0.3 as 'Прибыль'
+    FROM duka_goods g
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category
+    JOIN duka_operation_list ol ON ol.goods_id_goods = g.id_goods
+    JOIN duka_operations o ON o.id_operations = ol.operations_id_operations
+    WHERE o.operation_date BETWEEN @start_date AND @end_date;
+END
+GO
+
+-- Процедура для отчета "Поставки по поставщикам"
+CREATE OR ALTER PROCEDURE GetDeliveriesBySupplierReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        o.operation_date as 'Дата',
+        c.org_name as 'Поставщик',
+        gc.goods_category as 'Тип товара',
+        g.goods_name as 'Товар',
+        ol.quantity as 'Кол-во',
+        ol.prise_with_discount as 'Цена',
+        w.wharehouse as 'Склад'
+    FROM duka_operations o
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category
+    JOIN duka_wharehouse w ON w.id_wharehouse = ol.wharehouse_id_wharehouse;
+END
+GO
+
+-- Процедура для отчета "Налоги"
+CREATE OR ALTER PROCEDURE GetTaxesReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY t.taxe_name) as 'Номер',
+        t.taxe_name as 'Название налога',
+        t.tax_rate * 100 as 'Сумма',
+        DATEADD(month, -1, GETDATE()) as 'Дата начала',
+        GETDATE() as 'Дата окончания'
+    FROM duka_taxes t;
+END
+GO
+
+-- Процедура для отчета "Отчет о прибылях и убытках"
+CREATE OR ALTER PROCEDURE GetProfitLossReport
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float) * 0.7) as 'Расход',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Доходы',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float) * 0.2) as 'Налоги',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float) * 0.1) as 'Прибыль'
+    FROM duka_operations o
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    WHERE o.operation_date BETWEEN @start_date AND @end_date
+    GROUP BY o.operation_date;
+END
+GO
+
+-- Процедура для отчета "Оплата поставок"
+CREATE OR ALTER PROCEDURE GetSupplyPaymentsReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY p.payment_date) as 'Номер',
+        p.payment_date as 'Дата',
+        p.payment_sum as 'Сумма',
+        c.org_name as 'Поставщик',
+        e.last_name + ' ' + e.first_name as 'Сотрудник',
+        pt.payment_type as 'Тип оплаты'
+    FROM duka_payments p
+    JOIN duka_operations o ON o.id_operations = p.operations_id_operations
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_employee e ON e.id_employee = o.employee_id_employee
+    JOIN duka_payment_type pt ON pt.id_payment_type = p.payment_type_id_payment_type;
+END
+GO
+
+-- Процедура для отчета "Товары на складе"
+CREATE OR ALTER PROCEDURE GetWarehouseProductsReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY w.wharehouse) as 'Номер',
+        gc.goods_category as 'Тип товаров',
+        g.goods_name as 'Товар',
+        ol.prise_with_discount as 'Цена',
+        ol.quantity as 'Количество',
+        o.doc_num as 'Номер поставки',
+        w.wharehouse as 'Номер склада'
+    FROM duka_operation_list ol
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category
+    JOIN duka_wharehouse w ON w.id_wharehouse = ol.wharehouse_id_wharehouse
+    JOIN duka_operations o ON o.id_operations = ol.operations_id_operations;
+END
+GO
+
+-- Процедура для отчета "Прайс-лист"
+CREATE OR ALTER PROCEDURE GetPriceListReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY gc.goods_category) as 'Номер',
+        gc.goods_category as 'Категория товара',
+        g.goods_name as 'Товар',
+        pl.price_list as 'Цена товара'
+    FROM duka_price_list pl
+    JOIN duka_goods g ON g.id_goods = pl.goods_id_goods
+    JOIN duka_goods_category gc ON gc.id_goods_category = g.goods_category_id_goods_category;
+END
+GO
+
+-- Процедура для отчета "Сводка по заказам"
+CREATE OR ALTER PROCEDURE GetOrdersSummaryReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        o.operation_date as 'Дата',
+        c.org_name as 'Клиент',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Сумма',
+        os.operation_status as 'Статус'
+    FROM duka_operations o
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_operation_status os ON os.id_operation_status = o.operation_status_id_operation_status
+    GROUP BY o.operation_date, c.org_name, os.operation_status;
+END
+GO
+
+-- Процедура для отчета "Акции"
+CREATE OR ALTER PROCEDURE GetPromotionsReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY p.promoution_date_start) as 'Номер',
+        p.promoutions_name as 'Название',
+        p.promoution_comment as 'Описание',
+        p.promoution_date_start as 'Дата начала',
+        p.promoution_date_end as 'Дата окончания',
+        p.discount_value as 'Скидка'
+    FROM duka_promoutions p;
+END
+GO
+
+-- Процедура для отчета "Состав заказа"
+CREATE OR ALTER PROCEDURE GetOrderCompositionReport
+    @order_id INT
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        o.doc_num as 'Заказ',
+        g.goods_name as 'Товар',
+        ol.quantity as 'Количество',
+        ol.prise_with_discount as 'Цена',
+        ol.prise_with_discount * CAST(ol.quantity as float) as 'Сумма'
+    FROM duka_operations o
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_goods g ON g.id_goods = ol.goods_id_goods
+    WHERE o.id_operations = @order_id;
+END
+GO
+
+-- Процедура для отчета "Отмененные заказы"
+CREATE OR ALTER PROCEDURE GetCanceledOrdersReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        o.operation_date as 'Дата',
+        c.org_name as 'Клиент',
+        o.comments as 'Причина отмены',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Сумма'
+    FROM duka_operations o
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_operation_status os ON os.id_operation_status = o.operation_status_id_operation_status
+    WHERE os.operation_status = 'Отменен'
+    GROUP BY o.operation_date, c.org_name, o.comments;
+END
+GO
+
+-- Процедура для отчета "Продажи товаров"
+CREATE OR ALTER PROCEDURE GetProductSalesReport
+    @start_date DATE,
+    @end_date DATE
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY g.goods_name) as 'Номер',
+        g.goods_name as 'Товар',
+        SUM(CAST(ol.quantity as float)) as 'Количество',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Сумма продаж',
+        CONCAT(@start_date, ' - ', @end_date) as 'Период'
+    FROM duka_goods g
+    JOIN duka_operation_list ol ON ol.goods_id_goods = g.id_goods
+    JOIN duka_operations o ON o.id_operations = ol.operations_id_operations
+    WHERE o.operation_date BETWEEN @start_date AND @end_date
+    GROUP BY g.goods_name;
+END
+GO
+
+-- Процедура для отчета "Продажи по клиентам"
+CREATE OR ALTER PROCEDURE GetSalesByClientsReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY c.org_name) as 'Номер',
+        c.org_name as 'Клиент',
+        COUNT(DISTINCT o.id_operations) as 'Количество заказов',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Сумма покупок',
+        AVG(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Средний чек'
+    FROM duka_contragent c
+    JOIN duka_operations o ON o.contragent_id_contragent = c.id_contragent
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    GROUP BY c.org_name;
+END
+GO
+
+-- Процедура для отчета "Оплаты клиентов"
+CREATE OR ALTER PROCEDURE GetClientPaymentReport
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY p.payment_date) as 'Номер',
+        p.payment_date as 'Дата',
+        c.org_name as 'Клиент',
+        p.payment_sum as 'Сумма',
+        pt.payment_type as 'Тип оплаты'
+    FROM duka_payments p
+    JOIN duka_operations o ON o.id_operations = p.operations_id_operations
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_payment_type pt ON pt.id_payment_type = p.payment_type_id_payment_type;
+END
+GO
+
+-- Процедура для отчета "Заказы клиентов продавца"
+CREATE OR ALTER PROCEDURE GetSellersClientOrdersReport
+    @seller_id INT
+AS
+BEGIN
+    SELECT 
+        ROW_NUMBER() OVER (ORDER BY o.operation_date) as 'Номер',
+        o.operation_date as 'Дата',
+        c.org_name as 'Клиент',
+        SUM(ol.prise_with_discount * CAST(ol.quantity as float)) as 'Сумма',
+        os.operation_status as 'Статус'
+    FROM duka_operations o
+    JOIN duka_contragent c ON c.id_contragent = o.contragent_id_contragent
+    JOIN duka_operation_list ol ON ol.operations_id_operations = o.id_operations
+    JOIN duka_operation_status os ON os.id_operation_status = o.operation_status_id_operation_status
+    WHERE o.employee_id_employee = @seller_id
+    GROUP BY o.operation_date, c.org_name, os.operation_status;
+END
+GO
