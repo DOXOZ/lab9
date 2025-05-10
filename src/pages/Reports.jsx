@@ -18,22 +18,10 @@ export const DeliveriesBySupplierReport = createReport(
   ["Номер", "Дата", "Поставщик", "Тип товара", "Товар", "Кол-во", "Цена", "Склад"]
 );
 
-export const SupplierDebtReport = createReport(
-  "Задолженность поставщиков",
-  "supplier-debt",
-  ["Номер", "Номер поставки", "Поставщик", "Дедлайн", "Сумма к оплате", "Задолженность"]
-);
-
 export const TaxesReport = createReport(
   "Налоги",
   "taxes",
   ["Номер", "Название налога", "Сумма", "Дата начала", "Дата окончания"]
-);
-
-export const SalariesReport = createReport(
-  "Зарплаты сотрудников",
-  "salaries",
-  ["Номер", "Дата", "Начислено", "Оплачено", "Сотрудник"]
 );
 
 export const ProfitLossReport = createReport(
@@ -46,12 +34,6 @@ export const SupplyPaymentsReport = createReport(
   "Оплата поставок",
   "supply-payments",
   ["Номер", "Дата", "Сумма", "Поставщик", "Сотрудник", "Тип оплаты"]
-);
-
-export const DefectiveProductsReport = createReport(
-  "Бракованные товары",
-  "defective-products",
-  ["Номер", "Дата обнаружения", "Дата поставки", "Тип товаров", "Товар", "Количество", "Цена", "Поставщик"]
 );
 
 export const WarehouseProductsReport = createReport(
@@ -72,22 +54,10 @@ export const OrdersSummaryReport = createReport(
   ["Номер", "Дата", "Клиент", "Сумма", "Статус"]
 );
 
-export const ClientDebtsReport = createReport(
-  "Задолженности клиентов",
-  "client-debts",
-  ["Номер", "Дата", "Клиент", "Сумма задолженности", "Дата последней оплаты", "Срок погашения"]
-);
-
 export const PromotionsReport = createReport(
   "Акции",
   "promotions",
   ["Номер", "Название", "Описание", "Дата начала", "Дата окончания", "Скидка"]
-);
-
-export const ProductProfitReport = createReport(
-  "Прибыль по товарам",
-  "product-profit",
-  ["Номер", "Товар", "Количество продаж", "Выручка", "Затраты", "Прибыль"]
 );
 
 export const OrderCompositionReport = createReport(
@@ -114,15 +84,9 @@ export const SalesByClientsReport = createReport(
   ["Номер", "Клиент", "Количество заказов", "Сумма покупок", "Средний чек"]
 );
 
-export const SalesByWarehouseReport = createReport(
-  "Продажи по складам",
-  "sales-by-warehouse",
-  ["Номер", "Склад", "Количество отгрузок", "Сумма продаж"]
-);
-
 export const ClientPaymentReport = createReport(
   "Оплаты клиентов",
-  "client-payments",
+  "client-payment",
   ["Номер", "Дата", "Клиент", "Сумма", "Тип оплаты"]
 );
 
@@ -136,4 +100,28 @@ export const WarehouseRemaindersReport = createReport(
   "Остатки на складе",
   "warehouse-remainders",
   ["Номер", "Склад", "Тип товара", "Товар", "Количество", "Цена"]
+);
+
+export const SupplierDebtReport = createReport(
+  "Задолженность поставщиков",
+  "supplier-debt",
+  ["Номер", "Номер поставки", "Поставщик", "Дедлайн", "Сумма к оплате", "Задолженность"]
+);
+
+export const SalariesReport = createReport(
+  "Зарплаты сотрудников",
+  "salaries",
+  ["Номер", "Дата", "Начислено", "Оплачено", "Сотрудник"]
+);
+
+export const DefectiveProductsReport = createReport(
+  "Бракованные товары",
+  "defective-products",
+  ["Номер", "Дата обнаружения", "Дата поставки", "Тип товаров", "Товар", "Количество", "Цена", "Поставщик"]
+);
+
+export const ClientDebtsReport = createReport(
+  "Задолженности клиентов",
+  "client-debts",
+  ["Номер", "Дата", "Клиент", "Сумма задолженности", "Дата последней оплаты", "Срок погашения"]
 );
