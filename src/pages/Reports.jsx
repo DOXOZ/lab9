@@ -9,7 +9,7 @@ export { default as OrderPaymentsForPeriodReport } from "../components/reports/O
 export const BreakEvenReport = createReport(
   "Точка безубыточности",
   "break-even",
-  ["Номер", "Тип товара", "Товар", "Цена покупки", "Цена продажи", "Прибыль"]
+  ["Номер", "Дата", "Тип товара", "Товар", "Цена покупки", "Цена продажи", "Прибыль"]
 );
 
 export const DeliveriesBySupplierReport = createReport(
@@ -21,7 +21,7 @@ export const DeliveriesBySupplierReport = createReport(
 export const SupplierDebtReport = createReport(
   "Задолженность поставщиков",
   "supplier-debt",
-  ["Номер", "Номер поставки", "Поставщик", "Дедлайн", "Сумма оплате", "Задолженность"]
+  ["Номер", "Номер поставки", "Поставщик", "Дедлайн", "Сумма к оплате", "Задолженность"]
 );
 
 export const TaxesReport = createReport(
@@ -33,7 +33,7 @@ export const TaxesReport = createReport(
 export const SalariesReport = createReport(
   "Зарплаты сотрудников",
   "salaries",
-  ["Номер", "Дата", "Начисленно", "Оплачено", "Сотрудник"]
+  ["Номер", "Дата", "Начислено", "Оплачено", "Сотрудник"]
 );
 
 export const ProfitLossReport = createReport(
@@ -51,7 +51,7 @@ export const SupplyPaymentsReport = createReport(
 export const DefectiveProductsReport = createReport(
   "Бракованные товары",
   "defective-products",
-  ["Номер", "Дата поставки", "Тип товаров", "Товар", "Количество", "Цена", "Поставщик"]
+  ["Номер", "Дата обнаружения", "Дата поставки", "Тип товаров", "Товар", "Количество", "Цена", "Поставщик"]
 );
 
 export const WarehouseProductsReport = createReport(
@@ -75,7 +75,7 @@ export const OrdersSummaryReport = createReport(
 export const ClientDebtsReport = createReport(
   "Задолженности клиентов",
   "client-debts",
-  ["Номер", "Клиент", "Сумма задолженности", "Дата последней оплаты"]
+  ["Номер", "Дата", "Клиент", "Сумма задолженности", "Дата последней оплаты", "Срок погашения"]
 );
 
 export const PromotionsReport = createReport(
